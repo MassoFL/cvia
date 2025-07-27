@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Extraction Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            color: #007bff;
+            margin: 20px 0;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .sample-buttons {
+            margin-bottom: 20px;
+        }
+        .sample-buttons button {
+            background: #6c757d;
+            margin-bottom: 10px;
+            display: block;
+            width: 100%;
+        }
+        .sample-buttons button:hover {
+            background: #545b62;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Resume Extraction Test Tool</h1>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="filesCount">-</div>
+                <div class="stat-label">Files Uploaded</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="ocrCount">-</div>
+                <div class="stat-label">OCR Results</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="extractionCount">-</div>
+                <div class="stat-label">Extractions</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="resumeText">Resume Text to Test:</label>
+            <div class="sample-buttons">
+                <button onclick="loadSampleResume()">📄 Load Sample Resume</button>
+                <button onclick="loadSimpleResume()">📝 Load Simple Resume</button>
+                <button onclick="loadFrenchResume()">🇫🇷 Load French Resume</button>
+                <button onclick="clearText()">🗑️ Clear Text</button>
+            </div>
+            <textarea id="resumeText" placeholder="Paste your resume text here..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <button onclick="testExtraction()" id="testBtn">🚀 Test Resume Extraction</button>
+            <button onclick="checkDatabaseStatus()">📊 Check Database Status</button>
+            <button onclick="getLatestData()">📋 Get Latest Data</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <p>⏳ Processing... Please wait...</p>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Load database stats on page load
+        window.onload = function() {
+            checkDatabaseStatus();
+        };
+
+        function loadSampleResume() {
+            document.getElementById('resumeText').value = `JOHN DOE
+Software Engineer
+john.doe@email.com | (555) 123-4567 | New York, NY
+linkedin.com/in/johndoe | github.com/johndoe
+
+SUMMARY
+Experienced software engineer with 5+ years developing web applications using Python, JavaScript, and React.
+
+EXPERIENCE
+Senior Software Engineer
+Tech Company Inc. | New York, NY | 2021 - Present
+- Led development of microservices architecture serving 1M+ users
+- Implemented CI/CD pipelines reducing deployment time by 60%
+- Mentored 3 junior developers and conducted code reviews
+
+Software Engineer
+Startup XYZ | San Francisco, CA | 2019 - 2021
+- Built RESTful APIs using FastAPI and PostgreSQL
+- Developed frontend components using React and TypeScript
+- Collaborated with product team to deliver features on time
+
+EDUCATION
+Bachelor of Science in Computer Science
+University of Technology | 2019
+GPA: 3.8/4.0
+
+SKILLS
+Programming Languages: Python, JavaScript, TypeScript, Java
+Frameworks: React, FastAPI, Django, Node.js
+Databases: PostgreSQL, MongoDB, Redis
+Tools: Docker, AWS, Git, Jenkins
+
+PROJECTS
+E-commerce Platform
+- Built full-stack e-commerce application using React and Node.js
+- Implemented payment processing with Stripe API
+- Deployed on AWS with Docker containers
+
+CERTIFICATIONS
+AWS Certified Developer Associate
+Google Cloud Professional Developer`;
+        }
+
+        function loadSimpleResume() {
+            document.getElementById('resumeText').value = `JANE SMITH
+Marketing Manager
+jane.smith@email.com | (555) 987-6543 | Los Angeles, CA
+
+EXPERIENCE
+Marketing Manager
+ABC Company | Los Angeles, CA | 2020 - Present
+- Managed digital marketing campaigns
+- Increased website traffic by 40%
+
+Marketing Assistant
+XYZ Corp | San Diego, CA | 2018 - 2020
+- Assisted with social media management
+- Coordinated events and promotions
+
+EDUCATION
+Bachelor of Arts in Marketing
+State University | 2018
+
+SKILLS
+Digital Marketing, Social Media, Google Analytics, Adobe Creative Suite`;
+        }
+
+        function loadFrenchResume() {
+            document.getElementById('resumeText').value = `MARIE DUPONT
+Ingénieure Logicielle
+marie.dupont@email.fr | +33 1 23 45 67 89 | Paris, France
+linkedin.com/in/mariedupont
+
+RÉSUMÉ
+Ingénieure logicielle expérimentée avec 4 ans de développement d'applications web.
+
+EXPÉRIENCE
+Ingénieure Logicielle Senior
+TechCorp France | Paris | 2021 - Présent
+- Développement d'applications web avec React et Node.js
+- Gestion d'équipe de 5 développeurs
+- Optimisation des performances
+
+Développeuse Web
+Startup Paris | Paris | 2019 - 2021
+- Création d'APIs REST avec Express.js
+- Intégration de bases de données MongoDB
+
+FORMATION
+Master en Informatique
+École Centrale Paris | 2019
+
+COMPÉTENCES
+Langages: JavaScript, Python, Java
+Frameworks: React, Express.js, Django
+Bases de données: MongoDB, PostgreSQL
+Outils: Git, Docker, AWS`;
+        }
+
+        function clearText() {
+            document.getElementById('resumeText').value = '';
+        }
+
+        async function testExtraction() {
+            const text = document.getElementById('resumeText').value.trim();
+            if (!text) {
+                showResult('Please enter some resume text to test.', 'error');
+                return;
+            }
+
+            const testBtn = document.getElementById('testBtn');
+            const loading = document.getElementById('loading');
+            
+            testBtn.disabled = true;
+            loading.style.display = 'block';
+            clearResult();
+
+            try {
+                const response = await fetch('http://localhost:8000/test/extract_resume_text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`
+                        <h3>✅ Extraction Successful!</h3>
+                        <p><strong>Input length:</strong> ${data.input_text_length} characters</p>
+                        <h4>Extracted Data:</h4>
+                        <pre>${JSON.stringify(data.extracted_data, null, 2)}</pre>
+                        <h4>Raw Response:</h4>
+                        <pre>${data.raw_response}</pre>
+                    `, 'success');
+                } else {
+                    showResult(`❌ Error: ${data.detail || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Network Error: ${error.message}`, 'error');
+            } finally {
+                testBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        async function checkDatabaseStatus() {
+            try {
+                const response = await fetch('http://localhost:8000/test/database_status');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('filesCount').textContent = data.tables.uploaded_files;
+                    document.getElementById('ocrCount').textContent = data.tables.ocr_results;
+                    document.getElementById('extractionCount').textContent = data.tables.resume_structured_data;
+                    
+                    showResult(`
+                        <h3>📊 Database Status</h3>
+                        <p><strong>Status:</strong> ${data.status}</p>
+                        <ul>
+                            <li>Uploaded Files: ${data.tables.uploaded_files}</li>
+                            <li>OCR Results: ${data.tables.ocr_results}</li>
+                            <li>Structured Data: ${data.tables.resume_structured_data}</li>
+                        </ul>
+                    `, 'success');
+                } else {
+                    showResult(`❌ Database Error: ${data.detail}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Network Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function getLatestData() {
+            try {
+                const response = await fetch('http://localhost:8000/test/latest_data');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.message) {
+                        showResult(`<h3>📋 Latest Data</h3><p>${data.message}</p>`, 'success');
+                    } else {
+                        showResult(`
+                            <h3>📋 Latest Data</h3>
+                            <h4>Latest File:</h4>
+                            <pre>${JSON.stringify(data.latest_file, null, 2)}</pre>
+                            <h4>OCR Result:</h4>
+                            <pre>${JSON.stringify(data.ocr_result, null, 2)}</pre>
+                            <h4>Extraction Result:</h4>
+                            <pre>${JSON.stringify(data.extraction_result, null, 2)}</pre>
+                        `, 'success');
+                    }
+                } else {
+                    showResult(`❌ Error: ${data.detail}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Network Error: ${error.message}`, 'error');
+            }
+        }
+
+        function showResult(content, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="result ${type}">${content}</div>`;
+        }
+
+        function clearResult() {
+            document.getElementById('result').innerHTML = '';
+        }
+    </script>
+</body>
+</html> 
