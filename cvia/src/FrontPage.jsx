@@ -947,7 +947,7 @@ export default function FrontPage() {
       <div className="frontpage-content">
         <div className="frontpage-hero-section">
           <div className="frontpage-hero-text">
-            <h1>Une IA qui <span className="gradient-text">optimise votre CV</span> aux exigences de chaque poste</h1>
+            <h1>UNE IA qui <span className="gradient-text">optimise votre CV</span> aux exigences de chaque poste</h1>
             <p className="hero-subtitle">75% des CV sont rejetés avant même d'être vus par un recruteur à cause des systèmes de filtrage automatisé</p>
           </div>
         <div className="frontpage-upload-simple">
