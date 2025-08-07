@@ -6,14 +6,10 @@ import JobDescriptionStep from './JobDescriptionStep';
 import ExperienceComparisonStep from './ExperienceComparisonStep';
 import TemplateSelectionStep from './TemplateSelectionStep';
 import ProcessingStep from './ProcessingStep';
-
-export const steps = [
-  { icon: <FaUpload />, label: 'Chargement du CV' },
-  { icon: <FaEdit />, label: 'Validation des données' },
-  { icon: <FaUserTie />, label: 'Informations sur le poste' },
-  { icon: <FaCheckCircle />, label: 'Validation nouvelles données' },
-  { icon: <FaDownload />, label: 'Téléchargement du nouveau CV' },
-];
+import AuthModal from './components/AuthModal';
+import UserDropdown from './components/UserDropdown';
+import { useAuth } from './contexts/AuthContext';
+import { ProgressSteps } from './components/ProgressSteps';
 
 const ALIGNMENT_LEVELS = [
   { value: 'none', label: 'Aucune modification' },
@@ -22,37 +18,20 @@ const ALIGNMENT_LEVELS = [
   { value: 'radical', label: 'Changement radical' },
 ];
 
-function Navbar() {
+function Navbar({ onAuthClick, user, isAuthenticated }) {
   return (
     <nav className="frontpage-navbar">
       <div className="frontpage-navbar-left">CVIA</div>
       <div className="frontpage-navbar-right">
-        <button className="frontpage-navbar-btn">Sign In / Sign Up</button>
+        {isAuthenticated ? (
+          <UserDropdown />
+        ) : (
+          <button className="frontpage-navbar-btn" onClick={onAuthClick}>
+            Sign In / Sign Up
+          </button>
+        )}
       </div>
     </nav>
-  );
-}
-
-export function ProgressSteps({ currentStepIndex = 0 }) {
-  return (
-    <div className="frontpage-steps">
-      {steps.map((step, idx) => {
-        const isCompleted = idx < currentStepIndex;
-        const isCurrent = idx === currentStepIndex;
-        
-        return (
-          <React.Fragment key={step.label}>
-            <div className={`frontpage-step ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}`}>
-              <div className="frontpage-step-icon">{step.icon}</div>
-              <div className="frontpage-step-label">{step.label}</div>
-            </div>
-            {idx < steps.length - 1 && (
-              <div className={`frontpage-step-line ${isCompleted ? 'completed' : ''}`} />
-            )}
-          </React.Fragment>
-        );
-      })}
-    </div>
   );
 }
 
@@ -61,7 +40,7 @@ function InfoSection() {
     <div className="frontpage-info-section">
       <div className="frontpage-info-content">
         <div>
-          <h2 className="frontpage-info-title">Transformez votre CV en quelques clics</h2>
+          <h2 className="frontpage-info-title">Transformez <span className="gradient-text">votre CV</span> en quelques clics</h2>
           <p className="frontpage-info-subtitle">
             CVIA utilise l'intelligence artificielle pour adapter automatiquement votre CV à chaque offre d'emploi, 
             maximisant vos chances d'être sélectionné pour un entretien.
@@ -304,10 +283,23 @@ export default function FrontPage() {
   const [processingPhase, setProcessingPhase] = useState('summary');
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedPDFData, setGeneratedPDFData] = useState(null);
+  
+  // Authentication state
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState('login');
+  const { user, isAuthenticated } = useAuth();
 
   const GREEN = '#00ff99';
 
+  // Authentication handlers
+  const handleAuthClick = () => {
+    setAuthModalMode('login');
+    setShowAuthModal(true);
+  };
 
+  const handleAuthModalClose = () => {
+    setShowAuthModal(false);
+  };
 
   const handleButtonClick = () => {
     fileInputRef.current.click();
@@ -369,7 +361,7 @@ export default function FrontPage() {
       const formData = new FormData();
       formData.append('file', file);
   
-      fetch('http://localhost:8000/api/v1/upload', {
+      fetch('http://localhost:8000/api/v1/extract_structured_data_working', {
         method: 'POST',
         body: formData,
       })
@@ -391,18 +383,22 @@ export default function FrontPage() {
             throw new Error(data.error);
           }
           
-          if (!data.file_id) {
-            throw new Error('No file_id received from server');
+          if (!data.structured_data) {
+            throw new Error('No structured data received from server');
           }
           
-          console.log(`✅ Upload successful, file_id: ${data.file_id}`);
+          console.log(`✅ Structured data extraction successful, raw text: ${data.raw_text_length} characters`);
           setUploadStatus('success');
-          setStatusMessage('CV téléchargé et extrait avec succès !');
+          setStatusMessage('CV téléchargé et structuré avec succès !');
           
-          // Store the file ID and pass directly to validation step
-          setFileId(data.file_id);
-          setOcrResultId(data.file_id); // Use file_id as ocrResultId for compatibility
+          // Store the structured data and pass directly to validation step
+          setFileId('extracted_cv'); // Use a simple identifier
+          setOcrResultId('extracted_cv'); // Use same identifier for compatibility
           setCurrentStep('validation');
+          
+          // Store the structured data for the validation step
+          localStorage.setItem('structured_data', JSON.stringify(data.structured_data));
+          localStorage.setItem('raw_text_length', data.raw_text_length.toString());
         })
         .catch(error => {
           console.error('❌ Upload error:', error);
@@ -492,11 +488,11 @@ export default function FrontPage() {
 
   const handleJobContinue = async (desc) => {
     setJobDescription(desc);
-    setProcessingPhase('summary');
+    setProcessingPhase('parallel');
     setCurrentStep('processing');
     
     // Debug: Log the data being sent
-    console.log('🔍 Debug - Data being sent to generate_job_summary:');
+    console.log('🔍 Debug - Starting parallel processing for job description');
     console.log('Job description:', desc);
     
     // Validate required data
@@ -509,42 +505,50 @@ export default function FrontPage() {
     }
     
     try {
-      // First, generate job summary
-      console.log('📋 Generating job summary...');
-      const summaryResponse = await fetch('http://localhost:8000/generate_job_summary/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          job_description: desc,
-          experiences: oldExperiences
-        })
-      });
+      console.log('🚀 Starting parallel API calls...');
       
+      // 🚀 APPELS PARALLÈLES - Tous les appels se font en même temps
+      const [summaryResponse, alignResponse, skillsResponse] = await Promise.all([
+        // 1. Génération de synthèse
+        fetch('http://localhost:8000/generate_job_summary/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            job_description: desc,
+            experiences: oldExperiences
+          })
+        }),
+        
+        // 2. Alignement des expériences
+        fetch('http://localhost:8000/align_experiences/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            job_description: desc,
+            experiences: oldExperiences,
+            skills: resumeSkills,
+            level: alignmentLevel
+          })
+        }),
+        
+        // 3. Extraction des compétences
+        fetch('http://localhost:8000/extract_skills/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            job_description: desc
+          })
+        })
+      ]);
+      
+      console.log('✅ All parallel API calls completed!');
+      
+      // Vérifier les réponses et traiter les erreurs
       if (!summaryResponse.ok) {
         const errorText = await summaryResponse.text();
         console.error('❌ Summary generation error:', summaryResponse.status, errorText);
         throw new Error(`Erreur lors de la génération de la synthèse (${summaryResponse.status}): ${errorText}`);
       }
-      
-      const summaryData = await summaryResponse.json();
-      console.log('✅ Job summary generated:', summaryData);
-      setJobSummary(summaryData.summary);
-      
-      // Update phase to alignment
-      setProcessingPhase('alignment');
-      
-      // Then, align experiences
-      console.log('🔄 Aligning experiences...');
-      const alignResponse = await fetch('http://localhost:8000/align_experiences/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          job_description: desc,
-          experiences: oldExperiences,
-          skills: resumeSkills,
-          level: alignmentLevel
-        })
-      });
       
       if (!alignResponse.ok) {
         const errorText = await alignResponse.text();
@@ -552,32 +556,28 @@ export default function FrontPage() {
         throw new Error(`Erreur lors de l'alignement des expériences (${alignResponse.status}): ${errorText}`);
       }
       
-      const alignData = await alignResponse.json();
-      console.log('✅ Response from align_experiences:', alignData);
-      
-      // Update phase to skills extraction
-      setProcessingPhase('skills');
-      
-      // Extract skills from job description
-      console.log('🛠️ Extracting skills...');
-      const skillsResponse = await fetch('http://localhost:8000/extract_skills/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          job_description: desc
-        })
-      });
-      
       if (!skillsResponse.ok) {
         const errorText = await skillsResponse.text();
         console.error('❌ Skills extraction error:', skillsResponse.status, errorText);
         throw new Error(`Erreur lors de l'extraction des compétences (${skillsResponse.status}): ${errorText}`);
       }
       
-      const skillsData = await skillsResponse.json();
+      // Parser toutes les réponses en parallèle
+      const [summaryData, alignData, skillsData] = await Promise.all([
+        summaryResponse.json(),
+        alignResponse.json(),
+        skillsResponse.json()
+      ]);
+      
+      console.log('✅ Job summary generated:', summaryData);
+      console.log('✅ Experiences aligned:', alignData);
       console.log('✅ Skills extracted:', skillsData);
       
-      // Construct alignment pairs by combining old experiences with new aligned data
+      // Mettre à jour les états avec toutes les données
+      setJobSummary(summaryData.summary);
+      setJobSkills(skillsData.extracted_skills);
+      
+      // Construire les paires d'alignement
       const pairs = oldExperiences.map((oldExp, index) => {
         const alignment = alignData.alignments[index] || {};
         return {
@@ -589,13 +589,12 @@ export default function FrontPage() {
       });
       setAlignmentPairs(pairs);
       
-      // Store extracted skills for the next step
-      setJobSkills(skillsData.extracted_skills);
-      
-      // Move to next step
+      // Passer à l'étape suivante
+      console.log('🎉 Parallel processing completed successfully!');
       setCurrentStep('compare-experiences');
+      
     } catch (e) {
-      console.error('❌ Error in handleJobContinue:', e);
+      console.error('❌ Error in parallel processing:', e);
       alert(`Erreur lors du traitement: ${e.message}`);
       setCurrentStep('job'); // Go back to job description step on error
     }
@@ -706,10 +705,18 @@ export default function FrontPage() {
         <div className="frontpage-bg-glow1" />
         <div className="frontpage-bg-glow2" />
         <div className="frontpage-bg-glow3" />
-        <Navbar />
-        <ResumeValidation 
-          ocrResultId={ocrResultId} 
-          onValidationComplete={handleValidationComplete}
+        <Navbar onAuthClick={handleAuthClick} user={user} isAuthenticated={isAuthenticated()} />
+        <div className="frontpage-content">
+
+          <ResumeValidation 
+            ocrResultId={ocrResultId} 
+            onValidationComplete={handleValidationComplete}
+          />
+        </div>
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={handleAuthModalClose} 
+          initialMode={authModalMode} 
         />
       </div>
     );
@@ -717,12 +724,30 @@ export default function FrontPage() {
 
   // Show processing step if we're in processing step
   if (currentStep === 'processing') {
-    return <ProcessingStep currentPhase={processingPhase} jobDescription={jobDescription} />;
+    return (
+      <>
+        <ProcessingStep currentPhase={processingPhase} jobDescription={jobDescription} />
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={handleAuthModalClose} 
+          initialMode={authModalMode} 
+        />
+      </>
+    );
   }
 
   // Show job description step if we're in job step
   if (currentStep === 'job') {
-    return <JobDescriptionStep onContinue={handleJobContinue} onBack={() => setCurrentStep('validation')} isGeneratingSummary={isGeneratingSummary} />;
+    return (
+      <>
+        <JobDescriptionStep onContinue={handleJobContinue} onBack={() => setCurrentStep('validation')} isGeneratingSummary={isGeneratingSummary} />
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={handleAuthModalClose} 
+          initialMode={authModalMode} 
+        />
+      </>
+    );
   }
 
   // Show download step if we're in download step
@@ -732,7 +757,7 @@ export default function FrontPage() {
         <div className="frontpage-bg-glow1" />
         <div className="frontpage-bg-glow2" />
         <div className="frontpage-bg-glow3" />
-        <Navbar />
+        <Navbar onAuthClick={handleAuthClick} user={user} isAuthenticated={isAuthenticated()} />
         <ProgressSteps currentStepIndex={5} />
         <div className="frontpage-content">
           <div className="frontpage-hero-section">
@@ -829,7 +854,7 @@ export default function FrontPage() {
         <div className="frontpage-bg-glow1" />
         <div className="frontpage-bg-glow2" />
         <div className="frontpage-bg-glow3" />
-        <Navbar />
+        <Navbar onAuthClick={handleAuthClick} user={user} isAuthenticated={isAuthenticated()} />
         <TemplateSelectionStep
           onTemplateSelect={handleTemplateSelect}
           onBack={handleBackToExperiences}
@@ -867,6 +892,11 @@ export default function FrontPage() {
           })()}
           jobSummary={jobSummary}
         />
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={handleAuthModalClose} 
+          initialMode={authModalMode} 
+        />
       </div>
     );
   }
@@ -877,7 +907,7 @@ export default function FrontPage() {
         <div className="frontpage-bg-glow1" />
         <div className="frontpage-bg-glow2" />
         <div className="frontpage-bg-glow3" />
-        <Navbar />
+        <Navbar onAuthClick={handleAuthClick} user={user} isAuthenticated={isAuthenticated()} />
         <ExperienceComparisonStep
           alignmentPairs={alignmentPairs}
           onAlignmentPairsChange={setAlignmentPairs}
@@ -888,6 +918,12 @@ export default function FrontPage() {
           jobSummary={jobSummary}
           resumeSkills={resumeSkills}
           jobSkills={jobSkills}
+          validatedData={validatedData}
+        />
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={handleAuthModalClose} 
+          initialMode={authModalMode} 
         />
       </div>
     );
@@ -899,7 +935,7 @@ export default function FrontPage() {
       <div className="frontpage-bg-glow1" />
       <div className="frontpage-bg-glow2" />
       <div className="frontpage-bg-glow3" />
-      <Navbar />
+      <Navbar onAuthClick={handleAuthClick} user={user} isAuthenticated={isAuthenticated()} />
       {currentStep !== 'upload' && currentStep !== 'validation' && (
         <ProgressSteps currentStepIndex={
           currentStep === 'job' ? 2 : 
@@ -954,6 +990,13 @@ export default function FrontPage() {
           </div>
         </footer>
       </div>
+      
+      {/* Authentication Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={handleAuthModalClose} 
+        initialMode={authModalMode} 
+      />
     </div>
   );
 } 

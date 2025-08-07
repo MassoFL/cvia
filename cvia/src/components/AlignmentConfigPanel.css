@@ -1,0 +1,479 @@
+.alignment-config-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 999999 !important; /* Z-index très élevé pour être au-dessus de tout */
+  backdrop-filter: blur(4px);
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.alignment-config-panel {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 85vh;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+.config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #333;
+  background: #222;
+}
+
+.config-header h3 {
+  margin: 0;
+  color: #00ff99;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #333;
+  color: #fff;
+}
+
+.config-content {
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.config-section {
+  margin-bottom: 32px;
+}
+
+.config-section h4 {
+  margin: 0 0 16px 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Niveaux d'alignement */
+.alignment-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.level-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #2a2a2a;
+  border: 2px solid #333;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.level-option:hover {
+  border-color: #555;
+  background: #333;
+}
+
+.level-option.selected {
+  border-color: #00ff99;
+  background: rgba(0, 255, 153, 0.1);
+}
+
+.level-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.level-info {
+  flex: 1;
+}
+
+.level-label {
+  color: #fff;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.level-description {
+  color: #999;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Focus d'alignement */
+.focus-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.focus-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.focus-option:hover {
+  border-color: #555;
+  background: #333;
+}
+
+.focus-option.selected {
+  border-color: #00ff99;
+  background: rgba(0, 255, 153, 0.1);
+}
+
+.focus-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #555;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00ff99;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.focus-option.selected .focus-checkbox {
+  border-color: #00ff99;
+  background: #00ff99;
+  color: #000;
+}
+
+.focus-info {
+  flex: 1;
+}
+
+.focus-label {
+  color: #fff;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.focus-description {
+  color: #999;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+/* Styles de rédaction */
+.writing-styles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.style-option {
+  padding: 12px;
+  background: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.style-option:hover {
+  border-color: #555;
+  background: #333;
+}
+
+.style-option.selected {
+  border-color: #00ff99;
+  background: rgba(0, 255, 153, 0.1);
+}
+
+.style-label {
+  color: #fff;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.style-description {
+  color: #999;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+/* Options avancées */
+.advanced-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.option-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.option-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #00ff99;
+}
+
+/* Instructions personnalisées */
+.custom-instructions {
+  width: 100%;
+  padding: 12px;
+  background: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.custom-instructions:focus {
+  outline: none;
+  border-color: #00ff99;
+}
+
+.custom-instructions::placeholder {
+  color: #666;
+}
+
+.instruction-examples {
+  margin-top: 12px;
+}
+
+.examples-label {
+  color: #999;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.example-instruction {
+  background: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  color: #ccc;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.example-instruction:hover {
+  border-color: #00ff99;
+  background: rgba(0, 255, 153, 0.1);
+  color: #fff;
+}
+
+/* Aperçu */
+.preview-btn {
+  background: #333;
+  border: 1px solid #555;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.preview-btn:hover {
+  background: #444;
+  border-color: #00ff99;
+}
+
+.alignment-preview {
+  margin-top: 16px;
+  padding: 16px;
+  background: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: 6px;
+}
+
+.preview-note {
+  color: #999;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+/* Footer */
+.config-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid #333;
+  background: #222;
+}
+
+.cancel-btn {
+  background: none;
+  border: 1px solid #555;
+  color: #999;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn:hover {
+  border-color: #777;
+  color: #fff;
+}
+
+.apply-btn {
+  background: #00ff99;
+  border: none;
+  color: #000;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.apply-btn:hover:not(:disabled) {
+  background: #00cc7a;
+  transform: translateY(-1px);
+}
+
+.apply-btn:disabled {
+  background: #666;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* Scrollbar personnalisée */
+.config-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.config-content::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+.config-content::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+.config-content::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* Bouton de configuration d'alignement */
+.config-alignment-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: linear-gradient(135deg, #00ff99, #00cc7a);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 255, 153, 0.3);
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.config-alignment-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 255, 153, 0.4);
+}
+
+.config-alignment-btn:active {
+  transform: translateY(0);
+}
+
+/* Animation de pulsation pour le bouton quand l'alignement est en cours */
+.config-alignment-btn.applying {
+  animation: pulse-config 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-config {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(0, 255, 153, 0.3);
+  }
+  50% {
+    box-shadow: 0 6px 20px rgba(0, 255, 153, 0.6);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .alignment-config-panel {
+    width: 95%;
+    max-height: 95vh;
+  }
+  
+  .alignment-levels,
+  .focus-options,
+  .writing-styles {
+    grid-template-columns: 1fr;
+  }
+  
+  .config-header,
+  .config-content,
+  .config-footer {
+    padding: 16px;
+  }
+  
+  .config-alignment-btn {
+    position: relative;
+    margin-bottom: 16px;
+    width: 100%;
+    justify-content: center;
+  }
+}

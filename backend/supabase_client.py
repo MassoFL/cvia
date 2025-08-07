@@ -1,9 +1,9 @@
 from supabase import create_client, Client
 
 
-SUPABASE_URL="https://podcmpxfilnuwbrkvrbx.supabase.co"
-SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvZGNtcHhmaWxudXdicmt2cmJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0MDk4OTMsImV4cCI6MjA2Nzk4NTg5M30.bMy5agUCrdxoCA9g3C_U17aT9-JwfK1f56Z3iNtp1zY"
-   # Replace with your Supabase anon or service role key
-SUPABASE_BUCKET = "ttttt"             # Replace with your actual bucket name
+# Updated Supabase configuration
+SUPABASE_URL="https://uxusqvlpusscksejqbbn.supabase.co"
+SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4dXNxdmxwdXNzY2tzZWpxYmJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5OTI2NTMsImV4cCI6MjA2OTU2ODY1M30.Uf4eO2YvfYTqDH5lH5r81rVsE4om9cq8YQYlkgO-rTI"
+SUPABASE_BUCKET = "cvcv"              # CV storage bucket
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) 

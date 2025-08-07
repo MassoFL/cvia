@@ -1,5 +1,18 @@
 import React, { useState } from 'react';
-import { ProgressSteps } from './FrontPage';
+import { ProgressSteps } from './components/ProgressSteps';
+
+const GREEN = '#00ff99';
+
+function Navbar() {
+  return (
+    <nav className="frontpage-navbar">
+      <div className="frontpage-navbar-left">CVIA</div>
+      <div className="frontpage-navbar-right">
+        <button className="frontpage-navbar-btn">Sign In / Sign Up</button>
+      </div>
+    </nav>
+  );
+}
 
 // Composants d'aperçu pour chaque template
 const ModernPreview = () => (
@@ -925,8 +938,6 @@ const ATSPreviewWithData = ({ userData, jobSummary }) => (
   </div>
 );
 
-const GREEN = '#00ff99';
-
 // Templates disponibles avec aperçus visuels
 const templates = [
   {
@@ -1095,6 +1106,7 @@ export default function TemplateSelectionStep({
 
   return (
     <div className="frontpage-bg">
+      <Navbar />
       <div className="bottom-progress-steps">
         <ProgressSteps currentStepIndex={4} />
       </div>
@@ -1378,4 +1390,4 @@ export default function TemplateSelectionStep({
       )}
     </div>
   );
-} 
+}
